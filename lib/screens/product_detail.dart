@@ -17,13 +17,15 @@ class ProductDetailPage extends StatefulWidget {
       _ProductDetailPageState();
 }
 
-class _ProductDetailPageState extends State<ProductDetailPage> {
+class _ProductDetailPageState
+    extends State<ProductDetailPage> {
   late Future<Product> productFuture;
 
   @override
   void initState() {
     super.initState();
-    productFuture = ApiService.getProductDetail(widget.productId);
+    productFuture =
+        ApiService.getProductDetail(widget.productId);
   }
 
   void retry() {
@@ -106,7 +108,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
           if (!snapshot.hasData) {
             return const Center(
-              child: Text('Detail produk tidak ditemukan.'),
+              child: Text(
+                'Detail produk tidak ditemukan.',
+              ),
             );
           }
 
@@ -118,39 +122,60 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Gambar produk
+                // Gambar produk: tampilkan seluruh foto.
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
+                  child: Container(
                     width: double.infinity,
                     height: 280,
+                    color: Colors.white,
+                    alignment: Alignment.center,
                     child: imageUrl.isEmpty
-                        ? const Center(
-                      child: Icon(
-                        Icons.pets,
-                        size: 80,
-                        color: Colors.teal,
-                      ),
+                        ? const Icon(
+                      Icons.pets,
+                      size: 70,
+                      color: Colors.teal,
                     )
                         : Image.network(
                       imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (context, error, stackTrace) {
+                      width: double.infinity,
+                      height: 280,
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      loadingBuilder: (
+                          context,
+                          child,
+                          loadingProgress,
+                          ) {
+                        if (loadingProgress == null) {
+                          return child;
+                        }
+
+                        return const Center(
+                          child:
+                          CircularProgressIndicator(),
+                        );
+                      },
+                      errorBuilder: (
+                          context,
+                          error,
+                          stackTrace,
+                          ) {
                         return const Center(
                           child: Icon(
-                            Icons.pets,
-                            size: 80,
-                            color: Colors.teal,
+                            Icons.broken_image,
+                            size: 50,
+                            color: Colors.grey,
                           ),
                         );
                       },
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
-                // Nama produk
+                // Nama produk.
                 Text(
                   product.name,
                   style: const TextStyle(
@@ -158,9 +183,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 8),
 
-                // Harga
+                // Harga produk.
                 Text(
                   formatPrice(product.price),
                   style: const TextStyle(
@@ -169,9 +195,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
-                // Informasi kategori dan stok
+                // Informasi kategori, stok, dan status.
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -199,6 +226,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
                 const Text(
@@ -208,7 +236,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 8),
+
                 Text(
                   product.description.isEmpty
                       ? 'Belum ada deskripsi produk.'
@@ -233,7 +263,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(color: Colors.black54),
+            style: const TextStyle(
+              color: Colors.black54,
+            ),
           ),
         ),
         const SizedBox(width: 12),
