@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/category.dart';
 import '../services/api_service.dart';
+import '../widgets/app_logo.dart';
+import 'product_list_page.dart';
 
 class CategoryTestPage extends StatefulWidget {
   const CategoryTestPage({super.key});
@@ -12,187 +13,237 @@ class CategoryTestPage extends StatefulWidget {
 }
 
 class _CategoryTestPageState extends State<CategoryTestPage> {
-  late Future<List<Category>> categoriesFuture;
+  late Future<List<Kategory>> categoriesFuture;
 
   @override
   void initState() {
     super.initState();
-    categoriesFuture = ApiService.getCategories();
+    categoriesFuture = ApiService.getKategory();
   }
 
-  void refreshCategories() {
-    setState(() {
-      categoriesFuture = ApiService.getCategories();
-    });
+  // Memilih gambar kategori dari folder images
+  String getCategoryImage(String categoryName) {
+    switch (categoryName.toLowerCase().trim()) {
+      case 'kucing':
+        return 'images/kucing.jpg';
+
+      case 'anjing':
+        return 'images/anjing.jpg';
+
+      case 'kelinci':
+        return 'images/kelinci.png';
+
+      case 'burung':
+        return 'images/burung.jpg';
+
+      case 'ikan':
+        return 'images/ikan.jpg';
+
+      case 'hamster':
+        return 'images/hamster.jpg';
+
+      case 'makanan hewan':
+        return 'images/makanan_hewan.jpg';
+
+      case 'perawatan hewan':
+        return 'images/perawatan_hewan.png';
+
+      case 'aksesoris hewan':
+        return 'images/aksesoris_hewan.png';
+
+      default:
+        return '';
+    }
+  }
+
+  // Menampilkan gambar kategori
+  Widget buildCategoryImage(String categoryName) {
+    final imagePath = getCategoryImage(categoryName);
+
+    if (imagePath.isEmpty) {
+      return const Center(
+        child: Icon(
+          Icons.pets,
+          size: 50,
+          color: Colors.grey,
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.all(8),
+      child: Image.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('Error gambar: $imagePath - $error');
+
+          return const Center(
+            child: Icon(
+              Icons.broken_image,
+              size: 50,
+              color: Colors.grey,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Membuka daftar produk berdasarkan kategori
+  void openCategory(Kategory category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductListPage(
+          categoryId: category.id,
+          categoryName: category.name,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F8F5),
+
       appBar: AppBar(
-        title: const Text('Kategori Hewan Peliharaan'),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
+        title: Row(
+          children: [
+            const AppLogo(size: 50),
+            const Text(
+              'Kategori Hewan',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+
       ),
-      body: FutureBuilder<List<Category>>(
+
+      body: FutureBuilder<List<Kategory>>(
         future: categoriesFuture,
         builder: (context, snapshot) {
-          // Menampilkan loading saat data sedang diambil
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          // Menampilkan pesan jika terjadi error
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 50,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Gagal memuat kategori',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${snapshot.error}',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: refreshCategories,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
+              child: CircularProgressIndicator(
+                color: Colors.teal,
               ),
             );
           }
 
-          // Mengambil data kategori
-          final categories = snapshot.data ?? <Category>[];
-
-          if (categories.isEmpty) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                refreshCategories();
-                await categoriesFuture;
-              },
-              child: ListView(
-                children: const [
-                  SizedBox(height: 200),
-                  Center(
-                    child: Text('Belum ada kategori.'),
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 50,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Gagal memuat kategori'),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${snapshot.error}',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        categoriesFuture =
+                            ApiService.getKategory();
+                      });
+                    },
+                    child: const Text('Coba Lagi'),
                   ),
                 ],
               ),
             );
           }
 
-          // Menampilkan kategori dalam bentuk grid
-          return RefreshIndicator(
-            onRefresh: () async {
-              refreshCategories();
-              await categoriesFuture;
-            },
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: categories.length,
-              gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.78,
-              ),
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final imageUrl = category.image.trim();
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text('Kategori belum tersedia'),
+            );
+          }
 
-                return Card(
-                  clipBehavior: Clip.antiAlias,
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+          final categories = snapshot.data!;
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: categories.length,
+            gridDelegate:
+            const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.85,
+            ),
+
+            itemBuilder: (context, index) {
+              final category = categories[index];
+
+              return Card(
+                color: Colors.white,
+                elevation: 2,
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+
+                child: InkWell(
+                  onTap: () => openCategory(category),
+
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 8),
+
                       // Gambar kategori
-                      Expanded(
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: imageUrl.isEmpty
-                              ? const Center(
-                            child: Icon(
-                              Icons.pets,
-                              size: 60,
-                              color: Colors.teal,
-                            ),
-                          )
-                              : Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(
-                                  Icons.pets,
-                                  size: 60,
-                                  color: Colors.teal,
-                                ),
-                              );
-                            },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                        ),
+                        child: AspectRatio(
+                          aspectRatio: 1 / 1,
+                          child: buildCategoryImage(
+                            category.name,
                           ),
                         ),
                       ),
 
-                      // Nama dan deskripsi kategori
+                      const SizedBox(height: 8),
+
+                      // Nama kategori
                       Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              category.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              category.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          category.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           );
         },
       ),
